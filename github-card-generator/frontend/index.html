@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Dev Card Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --container-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-sub: #8b949e;
+            --accent: #238636;
+            --accent-hover: #2ea043;
+            --error: #f85149;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .subheading {
+            color: var(--text-sub);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+            background: var(--container-bg);
+            padding: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        input {
+            select {
+    background: #161b22;
+    color: white;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px;
+    outline: none;
+    cursor: pointer;
+}
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            padding: 12px 16px;
+            outline: none;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            display: none;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: left;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        .skeleton-circle { width: 60px; height: 60px; border-radius: 50%; background: #30363d; margin-bottom: 20px; }
+        .skeleton-line { height: 12px; background: #30363d; border-radius: 4px; margin-bottom: 12px; }
+        .skeleton-line.short { width: 40%; }
+        .skeleton-line.medium { width: 70%; }
+
+        /* Result Area */
+        #result-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-wrapper {
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 500px;
+    width: 100%;
+}
+
+        .share-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        .share-btn:hover {
+            background: var(--border-color);
+            color: white;
+            box-shadow: none;
+        }
+
+        .error-message {
+            display: none;
+            color: var(--error);
+            background: rgba(248, 81, 73, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            border: 1px solid var(--error);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Dev Card Generator</h1>
+        <p class="subheading">Enter any public GitHub username to generate your identity</p>
+        
+        <div class="input-group">
+            <select id="theme-select">
+    <option value="dark">Dark</option>
+    <option value="light">Light</option>
+    <option value="neon">Neon</option>
+</select>
+            <input type="text" id="username-input" placeholder="e.g. torvalds" spellcheck="false">
+            <button id="generate-btn" onclick="handleGenerate()">Generate Card</button>
+        </div>
+
+        <div id="loading" class="skeleton">
+            <div class="skeleton-circle"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div style="margin-top: 30px;">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+            </div>
+        </div>
+
+        <div id="result-container">
+            <div id="card-render" class="card-wrapper"></div>
+            <button class="share-btn" onclick="copyToClipboard()">Share Card URL</button>
+            <button class="share-btn" onclick="downloadCard()">
+    Download PNG
+</button>
+<button class="share-btn" onclick="downloadPDF()">
+    Export PDF
+</button>
+<div id="qr-container" style="margin-top:15px;"></div>
+        </div>
+
+        <div id="error-box" class="error-message"></div>
+    </div>
+
+    <script>
+        let currentCardUrl = '';
+        const BACKEND_URL = "http://127.0.0.1:8080";
+        async function handleGenerate() {
+            const usernameInput = document.getElementById('username-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const loading = document.getElementById('loading');
+            const resultContainer = document.getElementById('result-container');
+            const errorBox = document.getElementById('error-box');
+            const cardRender = document.getElementById('card-render');
+
+            const username = usernameInput.value.trim();
+            const selectedTheme =
+    document.getElementById("theme-select").value;
+            if (!username) return;
+
+            // UI Reset
+            errorBox.style.display = 'none';
+            resultContainer.style.display = 'none';
+            loading.style.display = 'block';
+            generateBtn.disabled = true;
+
+            try {
+                const BACKEND_URL = "http://127.0.0.1:8080";
+                const response = await fetch(`${BACKEND_URL}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+    username,
+    theme: selectedTheme
+})
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Could not generate card. Is the username correct?');
+                }
+
+                const data = await response.json();
+                
+                // Fetch the actual HTML from the served static path
+                currentCardUrl = `${BACKEND_URL}${data.card_url}`;
+                document.getElementById("qr-container").innerHTML = "";
+
+new QRCode(document.getElementById("qr-container"), {
+    text: currentCardUrl,
+    width: 120,
+    height: 120,
+});
+cardRender.innerHTML = `
+    <iframe 
+        src="${currentCardUrl}" 
+        width="100%" 
+        height="620px"
+scrolling="no"
+        style="border:none;border-radius:12px;width:100%;max-width:500px;">
+    </iframe>
+`;
+
+                
+                loading.style.display = 'none';
+                resultContainer.style.display = 'flex';
+            } catch (err) {
+                loading.style.display = 'none';
+                errorBox.innerText = `Error: ${err.message}`;
+                errorBox.style.display = 'block';
+            } finally {
+                generateBtn.disabled = false;
+            }
+        }
+
+        function copyToClipboard() {
+            if (!currentCardUrl) return;
+            navigator.clipboard.writeText(currentCardUrl).then(() => {
+                const shareBtn = document.querySelector('.share-btn');
+                const originalText = shareBtn.innerText;
+                shareBtn.innerText = 'Copied!';
+                shareBtn.style.color = '#238636';
+                setTimeout(() => {
+                    shareBtn.innerText = originalText;
+                    shareBtn.style.color = '#8b949e';
+                }, 2000);
+            });
+        }
+
+        async function downloadCard() {
+
+    const iframe = document.querySelector("iframe");
+
+    if (!iframe) {
+        alert("Generate a card first!");
+        return;
+    }
+
+    const iframeDoc =
+        iframe.contentDocument ||
+        iframe.contentWindow.document;
+
+    const card = iframeDoc.querySelector(".card");
+
+    if (!card) {
+        alert("Card not found!");
+        return;
+    }
+
+    const canvas = await html2canvas(card, {
+        backgroundColor: null,
+        scale: 2
+    });
+
+    const link = document.createElement("a");
+
+    link.download = "github-dev-card.png";
+
+    link.href = canvas.toDataURL("image/png");
+
+    link.click();
+}
+
+async function downloadPDF() {
+
+    const iframe = document.querySelector("iframe");
+
+    if (!iframe) {
+        alert("Generate a card first!");
+        return;
+    }
+
+    const iframeDoc =
+        iframe.contentDocument ||
+        iframe.contentWindow.document;
+
+    const card = iframeDoc.querySelector(".card");
+
+    const canvas = await html2canvas(card, {
+        scale: 2,
+        backgroundColor: null
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [canvas.width, canvas.height]
+    });
+
+    pdf.addImage(
+        imgData,
+        "PNG",
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    pdf.save("github-dev-card.pdf");
+}
+
+        // Allow Enter key to trigger generation
+        document.getElementById('username-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleGenerate();
+        });
+    </script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
